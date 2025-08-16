@@ -47,7 +47,7 @@ Go-RealTime-Chat/
 
 ### Backend Setup
 ```sh
-git clone [https://github.com/hbardhan/go-realtime-chat.git](https://github.com/hbardhan/Go-Real-Time-Chat---Scalable-Secure-Messaging-Application-)
+git clone [https://github.com/srajalnikhra/go-realtime-chat.git](https://github.com/srajalnikhra/Go-Real-Time-Chat---Scalable-Secure-Messaging-Application-)
 cd go-realtime-chat/server
 go mod tidy
 go run main.go
