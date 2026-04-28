@@ -1,3 +1,4 @@
+// WebSocket client models and connection handling
 package ws
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Client represents a single connected WebSocket user
 type Client struct {
 	Conn     *websocket.Conn
 	Message  chan *Message
@@ -14,12 +16,14 @@ type Client struct {
 	Username string `json:"username"`
 }
 
+// Message represents a chat message payload sent over WebSocket
 type Message struct {
 	Content  string `json:"content"`
 	RoomID   string `json:"roomId"`
 	Username string `json:"username"`
 }
 
+// writeMessage pumps messages from the hub to the websocket connection
 func (c *Client) writeMessage() {
 	defer func() {
 		c.Conn.Close()
@@ -35,6 +39,7 @@ func (c *Client) writeMessage() {
 	}
 }
 
+// readMessage pumps messages from the websocket connection to the hub
 func (c *Client) readMessage(hub *Hub) {
 	defer func() {
 		hub.Unregister <- c
@@ -56,6 +61,7 @@ func (c *Client) readMessage(hub *Hub) {
 			Username: c.Username,
 		}
 
+		// Route incoming message to the central hub for broadcasting
 		hub.Broadcast <- msg
 	}
 }

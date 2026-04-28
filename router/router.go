@@ -1,3 +1,4 @@
+// HTTP routing configuration and middleware setup
 package router
 
 import (
@@ -11,9 +12,11 @@ import (
 
 var r *gin.Engine
 
+// InitRouter configures all application routes and middleware
 func InitRouter(userHandler *user.Handler, wsHandler *ws.Handler) {
 	r = gin.Default()
 
+	// Configure CORS middleware for local development
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST"},
@@ -21,21 +24,24 @@ func InitRouter(userHandler *user.Handler, wsHandler *ws.Handler) {
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
-			return origin == "http://localhost:3000"
+			return origin == "http://localhost:8080"
 		},
 		MaxAge: 12 * time.Hour,
 	}))
 
+	// User authentication endpoints
 	r.POST("/signup", userHandler.CreateUser)
 	r.POST("/login", userHandler.Login)
 	r.GET("/logout", userHandler.Logout)
 
+	// WebSocket room management endpoints
 	r.POST("/ws/createRoom", wsHandler.CreateRoom)
 	r.GET("/ws/joinRoom/:roomId", wsHandler.JoinRoom)
 	r.GET("/ws/getRooms", wsHandler.GetRooms)
 	r.GET("/ws/getClients/:roomId", wsHandler.GetClients)
 }
 
+// Start launches the HTTP server on the specified address
 func Start(addr string) error {
 	return r.Run(addr)
 }

@@ -1,3 +1,4 @@
+// Business logic and orchestration for user operations
 package user
 
 import (
@@ -13,11 +14,13 @@ const (
 	secretKey = "secret"
 )
 
+// service implements the Service interface
 type service struct {
 	Repository
 	timeout time.Duration
 }
 
+// NewService initializes a new user service with a default timeout
 func NewService(repository Repository) Service {
 	return &service{
 		repository,
@@ -25,10 +28,12 @@ func NewService(repository Repository) Service {
 	}
 }
 
+// CreateUser handles business rules for registering a new user
 func (s *service) CreateUser(c context.Context, req *CreateUserReq) (*CreateUserRes, error) {
 	ctx, cancel := context.WithTimeout(c, s.timeout)
 	defer cancel()
 
+	// Hash password before storing in database
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
 		return nil, err
@@ -40,6 +45,7 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq) (*CreateUser
 		Password: hashedPassword,
 	}
 
+	// Persist user record
 	r, err := s.Repository.CreateUser(ctx, u)
 	if err != nil {
 		return nil, err
@@ -54,26 +60,31 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq) (*CreateUser
 	return res, nil
 }
 
+// MyJWTClaims represents the custom JWT payload
 type MyJWTClaims struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
+// Login verifies credentials and generates an authentication token
 func (s *service) Login(c context.Context, req *LoginUserReq) (*LoginUserRes, error) {
 	ctx, cancel := context.WithTimeout(c, s.timeout)
 	defer cancel()
 
+	// Fetch user by email address
 	u, err := s.Repository.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		return &LoginUserRes{}, err
 	}
 
+	// Validate provided password against stored hash
 	err = util.CheckPassword(req.Password, u.Password)
 	if err != nil {
 		return &LoginUserRes{}, err
 	}
 
+	// Generate JWT token for successful authentication
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, MyJWTClaims{
 		ID:       strconv.Itoa(int(u.ID)),
 		Username: u.Username,
